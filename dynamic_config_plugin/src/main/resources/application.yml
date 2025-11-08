@@ -1,0 +1,95 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+app:
+  name: "Development App"
+  version: "1.0.0"
+  description: "Development environment configuration"
+
+database:
+  connection:
+    url: "jdbc:mysql://localhost:3306/dev_db"
+    username: "dev_user"
+    password: "dev_password"
+    pool-size: 10
+
+servers:
+  - host: "dev-server1.example.com"
+    port: 8080
+    weight: 1
+  - host: "dev-server2.example.com"
+    port: 8081
+    weight: 2
+
+feature:
+  flags:
+    new-ui: true
+    advanced-search: false
+    beta-features: true
+
+security:
+  oauth:
+    client-id: "dev-client-id"
+    client-secret: "dev-client-secret"
+    redirect-uri: "http://localhost:8080/callback"
+
+logging:
+  level:
+    root: INFO
+    com.example: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+app:
+  name: "Production App"
+  version: "1.0.0"
+  description: "Production environment configuration"
+
+database:
+  connection:
+    url: "jdbc:mysql://prod-db.example.com:3306/prod_db"
+    username: "prod_user"
+    password: "prod_password"
+    pool-size: 50
+
+servers:
+  - host: "prod-server1.example.com"
+    port: 8080
+    weight: 1
+  - host: "prod-server2.example.com"
+    port: 8081
+    weight: 1
+  - host: "prod-server3.example.com"
+    port: 8082
+    weight: 2
+
+feature:
+  flags:
+    new-ui: true
+    advanced-search: true
+    beta-features: false
+
+security:
+  oauth:
+    client-id: "prod-client-id"
+    client-secret: "prod-client-secret"
+    redirect-uri: "https://app.example.com/callback"
+
+logging:
+  level:
+    root: WARN
+    com.example: INFO

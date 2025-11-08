@@ -1,0 +1,28 @@
+app:
+  name: "Test App"
+  version: "1.0.0"
+
+database:
+  connection:
+    url: "jdbc:mysql://localhost:3306/test_db"
+    username: "test_user"
+    password: "test_password"
+
+servers:
+  - host: "test-server1.example.com"
+    port: 8080
+  - host: "test-server2.example.com"
+    port: 8081
+
+feature:
+  flags:
+    new-ui: true
+    advanced-search: true
+
+security:
+  oauth:
+    client-id: "test-client-id"
+    client-secret: "test-client-secret"
+
+server:
+  port: 8080

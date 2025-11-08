@@ -1,0 +1,41 @@
+<!-- Copyright 2000-2025 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file. -->
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+
+<idea-plugin>
+
+  <!-- Unique id for this plugin. Must stay constant for the life of the plugin. -->
+  <id>com.example.dynamicconfig</id>
+
+  <!-- Text to display as name on Settings | Plugin page -->
+  <name>Dynamic Config Navigator</name>
+
+  <!-- Indicate this plugin can be loaded in all IntelliJ Platform-based products. -->
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.java</depends>
+
+  <!-- Text to display as description on Settings | Plugin page -->
+  <description>
+    <![CDATA[
+      Provides navigation support for @DynamicConfig annotations in Spring/SpringBoot projects.<br>
+      Allows navigating from configuration keys to their definitions in configuration files and opening external links.
+    ]]>
+  </description>
+  <change-notes>
+    <![CDATA[
+      <ul>
+        <li><b>1.0.0</b> Initial release with @DynamicConfig annotation support.</li>
+      </ul>
+    ]]>
+  </change-notes>
+
+  <!-- Text to display as company information on Settings | Plugin page -->
+  <vendor url="https://example.com">Example</vendor>
+
+  <!-- Extensions -->
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Register the reference contributor for @DynamicConfig annotation -->
+    <psi.referenceContributor 
+        implementation="com.example.dynamicconfig.reference.DynamicConfigReferenceContributor"/>
+  </extensions>
+
+</idea-plugin>
