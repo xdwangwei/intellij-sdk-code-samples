@@ -12,6 +12,7 @@
   <!-- Indicate this plugin can be loaded in all IntelliJ Platform-based products. -->
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.java</depends>
+  <depends>org.jetbrains.plugins.yaml</depends>
 
   <!-- Text to display as description on Settings | Plugin page -->
   <description>
@@ -35,6 +36,7 @@
   <extensions defaultExtensionNs="com.intellij">
     <!-- Register the reference contributor for @DynamicConfig annotation -->
     <psi.referenceContributor 
+        language="JAVA"
         implementation="com.example.dynamicconfig.reference.DynamicConfigReferenceContributor"/>
   </extensions>
 

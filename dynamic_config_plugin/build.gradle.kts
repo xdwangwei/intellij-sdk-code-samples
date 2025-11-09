@@ -2,6 +2,7 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdea
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdeaCommunity
 import org.jetbrains.intellij.platform.gradle.models.ProductRelease.Channel.RELEASE
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 plugins {
   id("java")
@@ -10,6 +11,13 @@ plugins {
 
 group = "com.example.dynamicconfig"
 version = "1.0.0"
+
+// 配置 Java 工具链，使用 Java 17 以确保与 IntelliJ IDEA 兼容
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
 
 repositories {
   mavenCentral()

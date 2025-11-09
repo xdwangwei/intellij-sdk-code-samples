@@ -1,5 +1,6 @@
 package com.example.dynamicconfig.util;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -7,7 +8,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.util.indexing.FileBasedIndex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.YAMLFileType;
 
@@ -22,11 +22,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ConfigPropertyResolver {
     
+    private static final Logger LOG = Logger.getInstance(ConfigPropertyResolver.class);
     private final Project project;
     private final Map<String, List<ConfigProperty>> propertyCache = new ConcurrentHashMap<>();
     
     public ConfigPropertyResolver(Project project) {
         this.project = project;
+        LOG.debug("ConfigPropertyResolver: 创建实例, project=" + project.getName());
         refreshCache();
     }
     
@@ -34,7 +36,9 @@ public class ConfigPropertyResolver {
      * 根据配置键查找所有匹配的配置项
      */
     public List<ConfigProperty> findPropertiesByKey(@NotNull String key) {
-        return propertyCache.getOrDefault(key, new ArrayList<>());
+        List<ConfigProperty> properties = propertyCache.getOrDefault(key, new ArrayList<>());
+        LOG.debug("ConfigPropertyResolver.findPropertiesByKey: key=" + key + ", 找到 " + properties.size() + " 个匹配项");
+        return properties;
     }
     
     /**
@@ -48,16 +52,37 @@ public class ConfigPropertyResolver {
      * 刷新配置缓存
      */
     public void refreshCache() {
+        LOG.info("ConfigPropertyResolver.refreshCache: 开始刷新缓存");
         propertyCache.clear();
         
-        // 查找所有YAML配置文件
-        Collection<VirtualFile> yamlFiles = FileBasedIndex.getInstance()
-            .getContainingFiles(FileTypeIndex.NAME, YAMLFileType.YML, GlobalSearchScope.projectScope(project));
-        
-        for (VirtualFile file : yamlFiles) {
-            if (isConfigFile(file)) {
-                parseConfigFile(file);
+        try {
+            // 查找所有YAML配置文件
+            // 使用 FileTypeIndex.getFiles 来获取所有 YAML 文件
+            // YAMLFileType.YML 是 YAML 插件提供的文件类型
+            LOG.debug("ConfigPropertyResolver: 查找 YAML 文件");
+            Collection<VirtualFile> yamlFiles = FileTypeIndex.getFiles(
+                YAMLFileType.YML, 
+                GlobalSearchScope.projectScope(project)
+            );
+            LOG.info("ConfigPropertyResolver: 找到 " + yamlFiles.size() + " 个 YAML 文件");
+            
+            int configFileCount = 0;
+            for (VirtualFile file : yamlFiles) {
+                LOG.debug("ConfigPropertyResolver: 检查文件=" + file.getName());
+                if (isConfigFile(file)) {
+                    LOG.info("ConfigPropertyResolver: 解析配置文件=" + file.getName());
+                    parseConfigFile(file);
+                    configFileCount++;
+                }
             }
+            LOG.info("ConfigPropertyResolver: 共解析 " + configFileCount + " 个配置文件");
+            LOG.info("ConfigPropertyResolver: 缓存中的配置键数量=" + propertyCache.size());
+        } catch (NoClassDefFoundError e) {
+            LOG.error("ConfigPropertyResolver: YAML 插件未找到", e);
+            // 如果 YAML 插件未加载或不可用，静默失败
+            // 这样插件仍然可以在没有 YAML 支持的情况下工作
+        } catch (Exception e) {
+            LOG.error("ConfigPropertyResolver: 刷新缓存时出错", e);
         }
         
         // TODO: 添加对.properties文件的支持
@@ -191,7 +216,45 @@ public class ConfigPropertyResolver {
         }
         
         public PsiElement getPsiElement() {
-            return file.findElementAt(file.getText().indexOf(key));
+            // 尝试找到包含该 key 的 PSI 元素
+            // 首先尝试通过行号定位
+            if (lineNumber > 0) {
+                try {
+                    String fileText = file.getText();
+                    String[] lines = fileText.split("\n");
+                    if (lineNumber <= lines.length) {
+                        String line = lines[lineNumber - 1];
+                        // 在行中查找 key
+                        int keyIndex = line.indexOf(key + ":");
+                        if (keyIndex >= 0) {
+                            // 计算在文件中的偏移量
+                            int offset = 0;
+                            for (int i = 0; i < lineNumber - 1; i++) {
+                                offset += lines[i].length() + 1; // +1 for newline
+                            }
+                            offset += keyIndex;
+                            PsiElement element = file.findElementAt(offset);
+                            if (element != null) {
+                                return element;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // 如果出错，使用 fallback 方法
+                }
+            }
+            
+            // Fallback: 在整个文件中查找 key
+            int index = file.getText().indexOf(key + ":");
+            if (index >= 0) {
+                PsiElement element = file.findElementAt(index);
+                if (element != null) {
+                    return element;
+                }
+            }
+            
+            // 如果都找不到，返回文件本身
+            return file;
         }
     }
 }
